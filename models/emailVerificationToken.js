@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const EmailVerificationTokenSchema = new mongoose.Schema({
-  token: {
+  verificationToken: {
     type: String,
     required: true
   },

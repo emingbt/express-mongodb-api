@@ -1,5 +1,8 @@
 const express = require('express')
 const router = express.Router()
+const bcrypt = require('bcryptjs')
+const { nanoid } = require('nanoid')
+const transporter = require('../nodemailer-config')
 
 const User = require('../models/user')
 const EmailVerificationToken = require('../models/emailVerificationToken')
@@ -10,7 +13,7 @@ router.post('/register', async (req, res) => {
   const createdUser = await User.create({
     name: name,
     email: email,
-    password: password
+    password: await bcrypt.hash(password, 10)
   })
 
   const emailVerificationToken = await EmailVerificationToken.create({
@@ -19,7 +22,7 @@ router.post('/register', async (req, res) => {
     expirationDate: Date.now() + 3600000
   })
 
-  const verificationUrl = `http://localhost:3000/auth/verifyEmail?emailVerificationToken=${emailVerificationToken.token}`
+  const verificationUrl = `http://localhost:3000/auth/verifyEmail?emailVerificationToken=${emailVerificationToken.verificationToken}`
 
   const mailOptions = {
     from: process.env.EMAIL,
@@ -43,11 +46,12 @@ router.post('/register', async (req, res) => {
 router.get('/verifyEmail', async (req, res) => {
   const { emailVerificationToken } = req.query
 
-  const token = await EmailVerificationToken.find({
+  const token = await EmailVerificationToken.findOne({
     verificationToken: emailVerificationToken
   })
 
   try {
+
     const user = await User.findById(token.user)
 
     user.isEmailVerified = true
@@ -62,15 +66,17 @@ router.get('/verifyEmail', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body
 
-  const user = await User.find({ email: email })
+  const user = await User.findOne({ email: email })
 
   if (!user) {
     res.status(401).send({ message: "There isn't any user with this email" })
   }
 
-  if (password == await bcrypt.compare(password, user.password)) {
+  if (await bcrypt.compare(password, user.password)) {
     res.status(200).send({ message: 'Login successful' })
   } else {
     res.status(401).send({ message: 'Incorrect password' })
   }
 })
+
+module.exports = router

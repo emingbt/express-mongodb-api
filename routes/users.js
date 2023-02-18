@@ -1,11 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const bcrypt = require('bcryptjs')
-const { nanoid } = require("nanoid")
-const transporter = require('../nodemailer-config')
 
 const User = require('../models/user')
-const EmailVerificationToken = require('../models/emailVerificationToken')
 
 router.get('/', async (req, res) => {
   const users = await User.find({})
@@ -41,8 +37,8 @@ router.put('/:id/:property', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   const { id } = req.params
-
   const deletedUser = await User.findByIdAndDelete(id)
+
   if (deletedUser) res.status(200).send(deletedUser)
   else res.status(404).send({ message: "User doesn't exist" })
 })

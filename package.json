@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/emingbt/express-mongodb-api#readme",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
@@ -25,6 +26,8 @@
     "http-errors": "^2.0.0",
     "mongoose": "^6.9.1",
     "morgan": "^1.10.0",
+    "nanoid": "^3.0.0",
+    "nodemailer": "^6.9.1",
     "nodemon": "^2.0.20",
     "pug": "^3.0.2"
   }

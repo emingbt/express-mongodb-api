@@ -11,5 +11,13 @@ services:
       PORT: 3000
     volumes:
       - .:/app
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - dbdata:/data/db
+    environment:
+      MONGODB_URI: mongodb-connection-string
 volumes:
   dbdata: {}

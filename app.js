@@ -5,6 +5,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 
 require('dotenv').config();
+require('./database-connection');
 
 const app = express();
 

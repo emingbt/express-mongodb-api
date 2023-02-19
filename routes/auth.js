@@ -15,6 +15,15 @@ const signtoken = (id) => {
 const createSendToken = (user, statusCode, res) => {
   const token = signtoken(user._id)
 
+  cookieOptions = {
+    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7 * 4), // 4 weeks
+    httpOnly: true
+  }
+
+  cookieOptions.secure = process.env.NODE_ENV === 'production' ? true : false
+
+  res.cookie('jwt', token, cookieOptions)
+
   user.password = undefined
 
   res.status(statusCode).json({
@@ -38,7 +47,7 @@ router.post('/register', async (req, res) => {
   const emailVerificationToken = await EmailVerificationToken.create({
     verificationToken: nanoid(),
     user: createdUser._id,
-    expirationDate: Date.now() + 3600000
+    expirationDate: new Date(Date.now() + 3600000) // 1 hour
   })
 
   const verificationUrl = `http://localhost:3000/auth/verifyEmail?emailVerificationToken=${emailVerificationToken.verificationToken}`

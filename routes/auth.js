@@ -3,9 +3,28 @@ const router = express.Router()
 const bcrypt = require('bcryptjs')
 const { nanoid } = require('nanoid')
 const transporter = require('../nodemailer-config')
+const jwt = require('jsonwebtoken')
 
 const User = require('../models/user')
 const EmailVerificationToken = require('../models/emailVerificationToken')
+
+const signtoken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET)
+}
+
+const createSendToken = (user, statusCode, res) => {
+  const token = signtoken(user._id)
+
+  user.password = undefined
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user
+    }
+  })
+}
 
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body
@@ -41,6 +60,8 @@ router.post('/register', async (req, res) => {
       res.status(200).send({ message: 'Email sent successfully' })
     }
   })
+
+  createSendToken(createdUser, 201, res)
 })
 
 router.get('/verifyEmail', async (req, res) => {
@@ -73,10 +94,25 @@ router.post('/login', async (req, res) => {
   }
 
   if (await bcrypt.compare(password, user.password)) {
-    res.status(200).send({ message: 'Login successful' })
+    createSendToken(user, 200, res)
   } else {
     res.status(401).send({ message: 'Incorrect password' })
   }
+})
+
+router.get('/me', async (req, res) => {
+  const authHeader = req.headers["authorization"]
+  const token = authHeader && authHeader.split(' ')[1]
+
+  if (token == null) return res.sendStatus(401)
+
+  jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
+    if (err) return res.sendStatus(403)
+
+    const foundUser = await User.findById(user.id)
+
+    res.json(foundUser)
+  })
 })
 
 module.exports = router

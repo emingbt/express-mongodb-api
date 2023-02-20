@@ -99,6 +99,8 @@ router.get('/verifyEmail', async (req, res) => {
     const user = await User.findById(token.user)
 
     user.isEmailVerified = true
+
+    await token.delete()
     await user.save()
 
     res.status(200).send({ message: 'Email verified successfully' })

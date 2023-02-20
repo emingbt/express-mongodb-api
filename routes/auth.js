@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs')
 const { nanoid } = require('nanoid')
 const transporter = require('../nodemailer-config')
 const jwt = require('jsonwebtoken')
+const pug = require('pug')
+const path = require('path')
 
 const User = require('../models/user')
 const EmailVerificationToken = require('../models/emailVerificationToken')
@@ -49,6 +51,7 @@ const authenticateToken = (req, res, next) => {
     next()
   })
 }
+
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body
 
@@ -70,7 +73,11 @@ router.post('/register', async (req, res) => {
     from: process.env.EMAIL,
     to: createdUser.email,
     subject: 'Email Verification',
-    html: `<p>Please click on the link below to verify your email address:</p><a href="${verificationUrl}">${verificationUrl}</a>`
+    html: pug.renderFile(
+      path.join(__dirname, '../views/emailVerification.pug'), {
+      name: createdUser.name,
+      verificationUrl: verificationUrl
+    })
   }
 
   transporter.sendMail(mailOptions, (err, info) => {

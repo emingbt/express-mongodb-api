@@ -1,0 +1,7 @@
+extends baseEmail
+
+block content
+  p Hello #{name} 👋
+  p You can verify your mail address by clicking the link below.
+  p.verificationUrl #{verificationUrl}
+  p It is nice to see you joining.

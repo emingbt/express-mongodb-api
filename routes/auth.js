@@ -35,6 +35,20 @@ const createSendToken = (user, statusCode, res) => {
   })
 }
 
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1]
+
+  if (token == null) return res.sendStatus(401)
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403)
+
+    req.user = user
+
+    next()
+  })
+}
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body
 
@@ -109,19 +123,12 @@ router.post('/login', async (req, res) => {
   }
 })
 
-router.get('/me', async (req, res) => {
-  const authHeader = req.headers["authorization"]
-  const token = authHeader && authHeader.split(' ')[1]
+router.get('/me', authenticateToken, async (req, res) => {
+  const user = await User.findById(req.user.id)
 
-  if (token == null) return res.sendStatus(401)
+  user.password = undefined
 
-  jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
-    if (err) return res.sendStatus(403)
-
-    const foundUser = await User.findById(user.id)
-
-    res.json(foundUser)
-  })
+  res.status(200).send(user)
 })
 
 module.exports = router

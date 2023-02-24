@@ -41,10 +41,12 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
-  if (token == null) return res.sendStatus(401)
+  if (token == null) return res.status(401).send({ message: 'Unauthorized' })
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403)
+    if (err) {
+      return res.status(403).send({ message: 'Invalid Token' })
+    }
 
     req.user = user
 
@@ -54,6 +56,12 @@ const authenticateToken = (req, res, next) => {
 
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body
+
+  const user = await User.findOne({ email: email })
+
+  if (user) {
+    return res.status(400).send({ message: 'There is a user exist with this email' })
+  }
 
   const createdUser = await User.create({
     name: name,
@@ -86,7 +94,6 @@ router.post('/register', async (req, res) => {
       res.status(500).send({ message: 'An error occured while sending email' })
     }
     else {
-      console.log(info)
       res.status(200).send({ message: 'Email sent successfully' })
     }
   })
@@ -105,6 +112,10 @@ router.get('/verifyEmail', async (req, res) => {
 
     const user = await User.findById(token.user)
 
+    if (user.isEmailVerified) {
+      return res.status(400).send({ message: 'Email already verified' })
+    }
+
     user.isEmailVerified = true
 
     await token.delete()
@@ -122,7 +133,7 @@ router.post('/login', async (req, res) => {
   const user = await User.findOne({ email: email })
 
   if (!user) {
-    res.status(401).send({ message: "There isn't any user with this email" })
+    return res.status(401).send({ message: "There isn't any user with this email" })
   }
 
   if (await bcrypt.compare(password, user.password)) {
@@ -138,6 +149,15 @@ router.get('/me', authenticateToken, async (req, res) => {
   user.password = undefined
 
   res.status(200).send(user)
+})
+
+router.post('/logout', authenticateToken, (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 1000 * 10),
+    httpOnly: true
+  })
+
+  res.status(200).send({ message: 'Logged out successfully' })
 })
 
 module.exports = router

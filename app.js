@@ -9,7 +9,6 @@ require('./database-connection')
 
 const app = express()
 
-const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
 const authRouter = require('./routes/auth')
 
@@ -22,7 +21,6 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use('/', indexRouter)
 app.use('/users', usersRouter)
 app.use('/auth', authRouter)
 
@@ -35,7 +33,6 @@ app.use(function (err, req, res, next) {
   res.locals.error = req.app.get('env') === 'development' ? err : {}
 
   res.status(err.status || 500)
-  res.render('error')
 })
 
 module.exports = app

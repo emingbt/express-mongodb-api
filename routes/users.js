@@ -6,40 +6,14 @@ const User = require('../models/user')
 router.get('/', async (req, res) => {
   const users = await User.find({})
 
-  res.render('users', { title: 'Users', users })
+  res.status(200).send(users)
 })
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params
   const user = await User.findById(id)
 
-  if (user) res.render('user', { title: 'User', user })
-  else res.status(404).send({ message: "User doesn't exist" })
-})
-
-router.put('/:id/:property', async (req, res) => {
-  const { id, property } = req.params
-  const { value } = req.body
-
-  const user = await User.findById(id)
-  if (!user) return res.status(404).send({ message: "User doesn't exist" })
-
-  const userProperties = Object.keys(user._doc)
-
-  if (userProperties.includes(property)) {
-    user[property] = value
-    await user.save()
-    res.status(200).send(user)
-  } else {
-    res.status(404).send({ message: "User doesn't have this property" })
-  }
-})
-
-router.delete('/:id', async (req, res) => {
-  const { id } = req.params
-  const deletedUser = await User.findByIdAndDelete(id)
-
-  if (deletedUser) res.status(200).send(deletedUser)
+  if (user) res.status(200).send(user)
   else res.status(404).send({ message: "User doesn't exist" })
 })
 

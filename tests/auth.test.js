@@ -149,11 +149,11 @@ describe('Auth', () => {
       const res = await request(app)
         .post('/auth/login')
         .send({
-          email: 'wrong_email@example.comm',
+          email: 'wrong_email@example.com',
           password: user.password
         })
 
-      expect(res.statusCode).toEqual(401)
+      expect(res.statusCode).toEqual(404)
       expect(res.body).toHaveProperty('message')
       expect(res.body.message).toEqual("There isn't any user with this email")
     })

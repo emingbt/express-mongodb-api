@@ -10,6 +10,7 @@ const path = require('path')
 const User = require('../models/user')
 const EmailVerificationToken = require('../models/emailVerificationToken')
 
+const { validate } = require('../utils/validate')
 const signtoken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET)
 }
@@ -54,7 +55,7 @@ const authenticateToken = (req, res, next) => {
   })
 }
 
-router.post('/register', async (req, res) => {
+router.post('/register', validate('register'), async (req, res) => {
   const { name, email, password } = req.body
 
   const user = await User.findOne({ email: email })
@@ -127,7 +128,7 @@ router.get('/verifyEmail', async (req, res) => {
   }
 })
 
-router.post('/login', async (req, res) => {
+router.post('/login', validate('login'), async (req, res) => {
   const { email, password } = req.body
 
   const user = await User.findOne({ email: email })

@@ -1,16 +1,13 @@
 const express = require('express')
 const router = express.Router()
 const bcrypt = require('bcryptjs')
-const { nanoid } = require('nanoid')
-const transporter = require('../nodemailer-config')
-const pug = require('pug')
-const path = require('path')
 
 const User = require('../models/user')
 const EmailVerificationToken = require('../models/emailVerificationToken')
 
 const { validate } = require('../utils/validate')
 const { createSendToken, authenticateToken } = require('../utils/auth')
+const { sendVerificationEmail } = require('../utils/transporter')
 
 router.post('/register', validate('register'), async (req, res) => {
   const { name, email, password } = req.body
@@ -27,34 +24,7 @@ router.post('/register', validate('register'), async (req, res) => {
     password: await bcrypt.hash(password, 10)
   })
 
-  const emailVerificationToken = await EmailVerificationToken.create({
-    verificationToken: nanoid(),
-    user: createdUser._id,
-    expirationDate: new Date(Date.now() + 3600000) // 1 hour
-  })
-
-  const verificationUrl = `http://localhost:3000/auth/verifyEmail?emailVerificationToken=${emailVerificationToken.verificationToken}`
-
-  const mailOptions = {
-    from: process.env.EMAIL,
-    to: createdUser.email,
-    subject: 'Email Verification',
-    html: pug.renderFile(
-      path.join(__dirname, '../views/emailVerification.pug'), {
-      name: createdUser.name,
-      verificationUrl: verificationUrl
-    })
-  }
-
-  transporter.sendMail(mailOptions, (err, info) => {
-    if (err) {
-      console.log(err)
-      res.status(500).send({ message: 'An error occured while sending email' })
-    }
-    else {
-      res.status(200).send({ message: 'Email sent successfully' })
-    }
-  })
+  await sendVerificationEmail(createdUser)
 
   createSendToken(createdUser, 201, res)
 })

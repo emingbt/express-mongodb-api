@@ -13,8 +13,8 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params
   const user = await User.findById(id)
 
-  if (user) res.status(200).send(user)
-  else res.status(404).send({ message: "User doesn't exist" })
+  if (user) return res.status(200).send(user)
+  res.status(404).send({ message: "User doesn't exist" })
 })
 
 module.exports = router
